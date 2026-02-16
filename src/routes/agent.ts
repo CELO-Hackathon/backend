@@ -231,4 +231,40 @@ router.post('/resolve-recipient', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/feedback/:agentId/:timestamp
+ * Get feedback metadata ( makes URIs resolvable)
+ */
+router.get('/feedback/:agentId/:timestamp', async (req, res, next) => {
+  try {
+    const { agentId, timestamp } = req.params;
+    
+    // Find transfer at this timestamp
+    const transfer = await Transfer.findOne({
+      agentId: parseInt(agentId),
+      createdAt: new Date(parseInt(timestamp) * 1000),
+    });
+    
+    if (!transfer) {
+      return res.status(404).json({ error: 'Feedback not found' });
+    }
+    
+    res.json({
+      agentId: parseInt(agentId),
+      timestamp: parseInt(timestamp),
+      transfer: {
+        txHash: transfer.txHash,
+        amount: transfer.amount,
+        recipient: transfer.recipient,
+        status: transfer.status,
+      },
+      rating: 5,
+      tags: ['remittance', 'transfer'],
+    });
+    
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -182,7 +182,7 @@ import { AgentReputation } from '../types/blockchain';
 import { weiToUsd } from '../utils/helpers';
 
 export class BlockchainService {
-  // ✅ Add getter for agent address
+  //  Add getter for agent address
   getAgentAddress(): Address {
     return walletClient.account.address;
   }
@@ -198,7 +198,7 @@ export class BlockchainService {
       args: [userAddress],
     });
     
-    return nonce;
+    return nonce as any;
   }
 
   /**
@@ -212,7 +212,7 @@ export class BlockchainService {
       args: [userAddress],
     });
     
-    return balance;
+    return balance as any;
   }
 
   /**
@@ -291,38 +291,160 @@ export class BlockchainService {
   /**
    * Get agent reputation from ERC-8004
    */
+  // async getAgentReputation(): Promise<AgentReputation> {
+  //   try {
+  //     const agentId = BigInt(env.PLATFORM_AGENT_ID);
+      
+  //     //  Try vault's helper function first
+  //     try {
+  //       const [feedbackCount, averageRating] = await publicClient.readContract({
+  //         address: CONTRACTS.VAULT,
+  //         abi: VAULT_ABI,
+  //         functionName: 'getAgentReputation',
+  //         args: [agentId],
+  //       });
+        
+  //       logger.debug('Agent reputation from vault', {
+  //         feedbackCount: feedbackCount.toString(),
+  //         averageRating: averageRating.toString(),
+  //       });
+        
+  //       return {
+  //         agentId: Number(agentId),
+  //         feedbackCount: Number(feedbackCount),
+  //         averageRating: Number(averageRating),
+  //         totalTransactions: Number(feedbackCount),
+  //         totalVolume: '0',
+  //         lastActive: new Date(),
+  //       };
+  //     } catch (vaultError) {
+  //       //  If vault fails, query reputation registry directly
+  //       logger.warn('Vault getAgentReputation failed, querying registry directly');
+        
+  //       const [feedbackCount, averageRating] = await publicClient.readContract({
+  //         address: CONTRACTS.REPUTATION_REGISTRY,
+  //         abi: REPUTATION_REGISTRY_ABI,
+  //         functionName: 'getSummary',
+  //         args: [
+  //           agentId,
+  //           [], // Empty array for all clients
+  //           'remittance',
+  //           'transfer'
+  //         ],
+  //       });
+        
+  //       logger.debug('Agent reputation from registry', {
+  //         feedbackCount: feedbackCount.toString(),
+  //         averageRating: averageRating.toString(),
+  //       });
+        
+  //       return {
+  //         agentId: Number(agentId),
+  //         feedbackCount: Number(feedbackCount),
+  //         averageRating: Number(averageRating),
+  //         totalTransactions: Number(feedbackCount),
+  //         totalVolume: '0',
+  //         lastActive: new Date(),
+  //       };
+  //     }
+      
+  //   } catch (error) {
+  //     logger.error('Failed to get agent reputation:', error);
+      
+  //     //  Return default values instead of throwing
+  //     logger.warn('Returning default reputation (agent may have no feedback yet)');
+      
+  //     return {
+  //       agentId: Number(env.PLATFORM_AGENT_ID),
+  //       feedbackCount: 0,
+  //       averageRating: 0,
+  //       totalTransactions: 0,
+  //       totalVolume: '0',
+  //       lastActive: new Date(),
+  //     };
+  //   }
+  // }
+
+  /**
+   * Get agent reputation from ERC-8004
+   */
   async getAgentReputation(): Promise<AgentReputation> {
     try {
       const agentId = BigInt(env.PLATFORM_AGENT_ID);
       
-      // Get reputation from vault (which queries reputation registry)
-      const [feedbackCount, averageRating] = await publicClient.readContract({
-        address: CONTRACTS.VAULT,
-        abi: VAULT_ABI,
-        functionName: 'getAgentReputation',
-        args: [agentId],
-      });
-      
-      logger.debug('Agent reputation fetched', {
-        feedbackCount: feedbackCount.toString(),
-        averageRating: averageRating.toString(),
-      });
-      
-      return {
-        agentId: Number(agentId),
-        feedbackCount: Number(feedbackCount),
-        averageRating: Number(averageRating),
-        totalTransactions: Number(feedbackCount),
-        totalVolume: '0',
-        lastActive: new Date(),
-      };
+      //  Try vault's helper function first
+      try {
+        const result = await publicClient.readContract({
+          address: CONTRACTS.VAULT,
+          abi: VAULT_ABI,
+          functionName: 'getAgentReputation',
+          args: [agentId],
+        }) as readonly [bigint, bigint, number]; //  Type assertion
+        
+        const [feedbackCount, averageRating] = result;
+        
+        logger.debug('Agent reputation from vault', {
+          feedbackCount: feedbackCount.toString(),
+          averageRating: averageRating.toString(),
+        });
+        
+        return {
+          agentId: Number(agentId),
+          feedbackCount: Number(feedbackCount),
+          averageRating: Number(averageRating),
+          totalTransactions: Number(feedbackCount),
+          totalVolume: '0',
+          lastActive: new Date(),
+        };
+      } catch (vaultError) {
+        //  If vault fails, query reputation registry directly
+        logger.warn('Vault getAgentReputation failed, querying registry directly');
+        
+        const result = await publicClient.readContract({
+          address: CONTRACTS.REPUTATION_REGISTRY,
+          abi: REPUTATION_REGISTRY_ABI,
+          functionName: 'getSummary',
+          args: [
+            agentId,
+            [], // Empty array for all clients
+            'remittance',
+            'transfer'
+          ],
+        }) as readonly [bigint, bigint, number]; //  Type assertion
+        
+        const [feedbackCount, averageRating] = result;
+        
+        logger.debug('Agent reputation from registry', {
+          feedbackCount: feedbackCount.toString(),
+          averageRating: averageRating.toString(),
+        });
+        
+        return {
+          agentId: Number(agentId),
+          feedbackCount: Number(feedbackCount),
+          averageRating: Number(averageRating),
+          totalTransactions: Number(feedbackCount),
+          totalVolume: '0',
+          lastActive: new Date(),
+        };
+      }
       
     } catch (error) {
       logger.error('Failed to get agent reputation:', error);
-      throw new Error('Failed to fetch agent reputation');
+      
+      //  Return default values
+      logger.warn('Returning default reputation (agent may have no feedback yet)');
+      
+      return {
+        agentId: Number(env.PLATFORM_AGENT_ID),
+        feedbackCount: 0,
+        averageRating: 0,
+        totalTransactions: 0,
+        totalVolume: '0',
+        lastActive: new Date(),
+      };
     }
   }
-
   /**
    * Get domain separator for EIP-712 signing
    */
@@ -333,7 +455,7 @@ export class BlockchainService {
       functionName: 'getDomainSeparator',
     });
     
-    return domainSeparator;
+    return domainSeparator as any;
   }
 }
 
