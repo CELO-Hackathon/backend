@@ -1,0 +1,23 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "PulseRemit",
+  "description": "AI agent for gasless remittances in Africa. Natural language processing powered by Gemini AI. Built on Celo.",
+  "image": "",
+  "services": [
+    {
+      "name": "api",
+      "endpoint": "http://localhost:3001/api"
+    }
+  ],
+  "x402Support": true,
+  "active": true,
+  "registrations": [
+    {
+      "agentId": 1,
+      "agentRegistry": "eip155:1114220:0x8004A818BFB912233c491871b3d84c89A494BD9e"
+    }
+  ],
+  "supportedTrust": [
+    "reputation"
+  ]
+}

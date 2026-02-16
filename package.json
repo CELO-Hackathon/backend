@@ -1,0 +1,42 @@
+{
+  "name": "pulseremit-backend",
+  "version": "1.0.0",
+  "description": "AI-powered remittance backend for PulseRemit on Celo",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@ensdomains/ensjs": "^4.2.2",
+    "@google/generative-ai": "^0.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.9.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "node-cron": "^3.0.3",
+    "viem": "^2.45.3",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.6",
+    "@types/node-cron": "^3.0.11",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "eslint": "^8.56.0",
+    "nodemon": "^3.0.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
