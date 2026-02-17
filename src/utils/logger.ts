@@ -1,6 +1,16 @@
 // import winston from 'winston';
 // import { env } from '../config/env';
 
+// const isVercel = process.env.VERCEL === '1';
+
+// // ✅ Custom JSON replacer to handle BigInt
+// const bigIntReplacer = (key: string, value: any) => {
+//   if (typeof value === 'bigint') {
+//     return value.toString();
+//   }
+//   return value;
+// };
+
 // const logFormat = winston.format.combine(
 //   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
 //   winston.format.errors({ stack: true }),
@@ -12,70 +22,89 @@
 //   winston.format.colorize(),
 //   winston.format.timestamp({ format: 'HH:mm:ss' }),
 //   winston.format.printf(({ timestamp, level, message, ...meta }) => {
-//     const metaStr = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+//     // ✅ Use custom replacer to handle BigInt
+//     const metaStr = Object.keys(meta).length 
+//       ? JSON.stringify(meta, bigIntReplacer, 2) 
+//       : '';
 //     return `${timestamp} [${level}]: ${message} ${metaStr}`;
 //   })
 // );
 
-// export const logger = winston.createLogger({
-//   level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-//   format: logFormat,
-//   transports: [
-//     new winston.transports.Console({
-//       format: consoleFormat,
-//     }),
+// const transports: winston.transport[] = [
+//   new winston.transports.Console({
+//     format: winston.format.combine(
+//       winston.format.colorize(),
+//       winston.format.timestamp({ format: 'HH:mm:ss' }),
+//       winston.format.printf(({ timestamp, level, message, ...meta }) => {
+//         const metaStr = Object.keys(meta).length
+//           ? '\n' + JSON.stringify(meta, null, 2)
+//           : '';
+//         return `${timestamp} [${level}]: ${message}${metaStr}`;
+//       })
+//     ),
+//   }),
+// ];
+
+// // ✅ Only write to files locally
+// if (!isVercel) {
+//   const fs = require('fs');
+//   if (!fs.existsSync('logs')) {
+//     fs.mkdirSync('logs', { recursive: true });
+//   }
+
+//   transports.push(
 //     new winston.transports.File({
 //       filename: 'logs/error.log',
 //       level: 'error',
-//
+//       format: winston.format.combine(
+//         winston.format.timestamp(),
+//         winston.format.json()
+//       ),
+//     }),
+//     new winston.transports.File({
+//       filename: 'logs/combined.log',
+//       format: winston.format.combine(
+//         winston.format.timestamp(),
+//         winston.format.json()
+//       ),
+//     })
+//   );
+// }
+
+// export const logger = winston.createLogger({
+//   level: process.env.LOG_LEVEL || 'info',
+//   transports,
+// });
+  
 import winston from 'winston';
-import { env } from '../config/env';
 
 const isVercel = process.env.VERCEL === '1';
 
-// ✅ Custom JSON replacer to handle BigInt
-const bigIntReplacer = (key: string, value: any) => {
+//  BigInt serializer - handles BigInt in all log objects
+const bigIntReplacer = (_key: string, value: unknown): unknown => {
   if (typeof value === 'bigint') {
     return value.toString();
   }
   return value;
 };
 
-const logFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.errors({ stack: true }),
-  winston.format.splat(),
-  winston.format.json()
-);
-
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: 'HH:mm:ss' }),
   winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    // ✅ Use custom replacer to handle BigInt
-    const metaStr = Object.keys(meta).length 
-      ? JSON.stringify(meta, bigIntReplacer, 2) 
+    const metaStr = Object.keys(meta).length
+      ? '\n' + JSON.stringify(meta, bigIntReplacer, 2) // 
       : '';
-    return `${timestamp} [${level}]: ${message} ${metaStr}`;
+    return `${timestamp} [${level}]: ${message}${metaStr}`;
   })
 );
 
 const transports: winston.transport[] = [
   new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.timestamp({ format: 'HH:mm:ss' }),
-      winston.format.printf(({ timestamp, level, message, ...meta }) => {
-        const metaStr = Object.keys(meta).length
-          ? '\n' + JSON.stringify(meta, null, 2)
-          : '';
-        return `${timestamp} [${level}]: ${message}${metaStr}`;
-      })
-    ),
+    format: consoleFormat,
   }),
 ];
 
-// ✅ Only write to files locally
 if (!isVercel) {
   const fs = require('fs');
   if (!fs.existsSync('logs')) {
@@ -88,14 +117,18 @@ if (!isVercel) {
       level: 'error',
       format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.json()
+        winston.format.json({
+          replacer: bigIntReplacer, 
+        })
       ),
     }),
     new winston.transports.File({
       filename: 'logs/combined.log',
       format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.json()
+        winston.format.json({
+          replacer: bigIntReplacer, 
+        })
       ),
     })
   );
@@ -105,4 +138,3 @@ export const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   transports,
 });
-  

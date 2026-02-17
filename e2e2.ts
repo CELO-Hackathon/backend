@@ -116,16 +116,16 @@ interface EIP712Types {
 
 const CONFIG: Config = {
   // Your test wallet private key
-  PRIVATE_KEY: '',
+  PRIVATE_KEY: '0x8eb8d223daf2788c8f7ec3e7f7c33176f6e4117aa1f793eccde00cf395206b87',
   // Contract addresses (update after deployment)
   VAULT_ADDRESS: '0x4a37e2904a5eB84e18374041C7654Cfb3e7E1058',
   CUSD_ADDRESS: '0xAd9a854784BD9e8e5E975e39cdFD34cA32dd7fEf',
   
   // Backend API
-  API_URL: 'http://localhost:3000/api',
-  
+  API_URL: 'https://pulseremitbackend-dwiz4fgob-etette-etoks-projects.vercel.app/api',
+  // API_URL: 'http://localhost:3000/api',
   // Test transfer details
-  RECIPIENT: '0xb4c547cD699b2149EE8F675690fD41D65c30FE57',
+  RECIPIENT: '0x5a22163f3D009Bb829a9Aca9BE99fBfa6D69Ec55',
   AMOUNT: '200', // cUSD
   
   // Network
@@ -273,31 +273,31 @@ async function main(): Promise<void> {
     success('Wallet has sufficient balance');
 
     // STEP 2
-    log(2, 'Approving Vault to spend cUSD...');
+    // log(2, 'Approving Vault to spend cUSD...');
 
-    const approveTx = await retry(
-      () =>
-        cUSD.approve(CONFIG.VAULT_ADDRESS, ethers.parseEther('1000')),
-      'Approve transaction'
-    );
+    // const approveTx = await retry(
+    //   () =>
+    //     cUSD.approve(CONFIG.VAULT_ADDRESS, ethers.parseEther('1000')),
+    //   'Approve transaction'
+    // );
 
-    console.log(`Approve TX: ${approveTx.hash}`);
-    await retry(() => approveTx.wait(), 'Approve confirmation');
+    // console.log(`Approve TX: ${approveTx.hash}`);
+    // await retry(() => approveTx.wait(), 'Approve confirmation');
 
-    success('Approval confirmed');
+    // success('Approval confirmed');
 
-    // STEP 3
-    log(3, 'Depositing cUSD to Vault...');
+    // // STEP 3
+    // log(3, 'Depositing cUSD to Vault...');
 
-    const depositAmount = ethers.parseEther('100');
+    // const depositAmount = ethers.parseEther('500');
 
-    const depositTx = await retry(
-      () => vault.deposit(depositAmount),
-      'Deposit transaction'
-    );
+    // const depositTx = await retry(
+    //   () => vault.deposit(depositAmount),
+    //   'Deposit transaction'
+    // );
 
-    console.log(`Deposit TX: ${depositTx.hash}`);
-    await retry(() => depositTx.wait(), 'Deposit confirmation');
+    // console.log(`Deposit TX: ${depositTx.hash}`);
+    // await retry(() => depositTx.wait(), 'Deposit confirmation');
 
     const vaultBalance = await retry(
       () => vault.balanceOf(wallet.address) as Promise<bigint>,
@@ -327,32 +327,6 @@ async function main(): Promise<void> {
       error(`Insufficient vault balance! Has ${ethers.formatEther(onChainBalance)}, needs ${CONFIG.AMOUNT}`);
     }
 
-    // STEP 4
-    log(4, 'Authorizing backend agent...');
-
-    const statusData = await fetchWithRetry<AgentStatusResponse>(
-      `${CONFIG.API_URL}/agent/status`,
-      { method: 'GET' },
-      'Fetch agent status'
-    );
-
-    const authTx = await retry(
-      () =>
-        vault.setAgentLimit(
-          statusData.agentAddress,
-          ethers.parseEther('300')
-        ),
-      'Authorize agent transaction'
-    );
-
-    console.log(`Authorization TX: ${authTx.hash}`);
-    await retry(() => authTx.wait(), 'Authorization confirmation');
-
-    success('Agent authorized');
-
-    await sleep(3000);
-
-    // STEP 5
     log(5, 'Authenticating with backend...');
 
     const nonceData = await fetchWithRetry<NonceResponse>(
@@ -387,6 +361,34 @@ async function main(): Promise<void> {
 
     const token = loginData.token;
     success('Backend authentication successful');
+
+    // STEP 4
+    log(4, 'Authorizing backend agent...');
+
+    const statusData = await fetchWithRetry<AgentStatusResponse>(
+      `${CONFIG.API_URL}/agent/status`,
+      { method: 'GET' },
+      'Fetch agent status'
+    );
+
+    const authTx = await retry(
+      () =>
+        vault.setAgentLimit(
+          statusData.agentAddress,
+          ethers.parseEther('300')
+        ),
+      'Authorize agent transaction'
+    );
+
+    console.log(`Authorization TX: ${authTx.hash}`);
+    await retry(() => authTx.wait(), 'Authorization confirmation');
+
+    success('Agent authorized');
+
+    await sleep(3000);
+
+    // STEP 5
+    
 
     // STEP 6
     log(6, 'Parsing transfer intent with AI...');

@@ -11,7 +11,7 @@ const router = Router();
 
 /**
  * GET /api/agent/status
- * Check agent setup status (for frontend health check)
+ * Check agent setup status
  */
 router.get('/status', async (req, res, next) => {
   try {
