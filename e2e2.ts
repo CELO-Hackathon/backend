@@ -273,31 +273,31 @@ async function main(): Promise<void> {
     success('Wallet has sufficient balance');
 
     // STEP 2
-    // log(2, 'Approving Vault to spend cUSD...');
+    log(2, 'Approving Vault to spend cUSD...');
 
-    // const approveTx = await retry(
-    //   () =>
-    //     cUSD.approve(CONFIG.VAULT_ADDRESS, ethers.parseEther('1000')),
-    //   'Approve transaction'
-    // );
+    const approveTx = await retry(
+      () =>
+        cUSD.approve(CONFIG.VAULT_ADDRESS, ethers.parseEther('1000')),
+      'Approve transaction'
+    );
 
-    // console.log(`Approve TX: ${approveTx.hash}`);
-    // await retry(() => approveTx.wait(), 'Approve confirmation');
+    console.log(`Approve TX: ${approveTx.hash}`);
+    await retry(() => approveTx.wait(), 'Approve confirmation');
 
-    // success('Approval confirmed');
+    success('Approval confirmed');
 
-    // // STEP 3
-    // log(3, 'Depositing cUSD to Vault...');
+    // STEP 3
+    log(3, 'Depositing cUSD to Vault...');
 
-    // const depositAmount = ethers.parseEther('500');
+    const depositAmount = ethers.parseEther('500');
 
-    // const depositTx = await retry(
-    //   () => vault.deposit(depositAmount),
-    //   'Deposit transaction'
-    // );
+    const depositTx = await retry(
+      () => vault.deposit(depositAmount),
+      'Deposit transaction'
+    );
 
-    // console.log(`Deposit TX: ${depositTx.hash}`);
-    // await retry(() => depositTx.wait(), 'Deposit confirmation');
+    console.log(`Deposit TX: ${depositTx.hash}`);
+    await retry(() => depositTx.wait(), 'Deposit confirmation');
 
     const vaultBalance = await retry(
       () => vault.balanceOf(wallet.address) as Promise<bigint>,
