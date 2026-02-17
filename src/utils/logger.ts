@@ -88,6 +88,14 @@ const bigIntReplacer = (_key: string, value: unknown): unknown => {
   return value;
 };
 
+// Then in the printf format:
+winston.format.printf(({ timestamp, level, message, ...meta }) => {
+  const metaStr = Object.keys(meta).length
+    ? '\n' + JSON.stringify(meta, bigIntReplacer, 2)
+    : '';
+  return `${timestamp} [${level}]: ${message}${metaStr}`;
+})
+
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: 'HH:mm:ss' }),

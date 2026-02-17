@@ -109,6 +109,7 @@ app.use(helmet({
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); 
 app.use(express.json());
+app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', apiLimiter);
 

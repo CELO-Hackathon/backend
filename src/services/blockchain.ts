@@ -270,7 +270,7 @@ export class BlockchainService {
       
       logger.info('Transfer confirmed', {
         hash,
-        blockNumber: receipt.blockNumber,
+        blockNumber: Number(receipt.blockNumber),
         gasUsed: receipt.gasUsed.toString(),
       });
       
