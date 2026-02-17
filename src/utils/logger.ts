@@ -27,15 +27,11 @@
 //     new winston.transports.File({
 //       filename: 'logs/error.log',
 //       level: 'error',
-//     }),
-//     new winston.transports.File({
-//       filename: 'logs/combined.log',
-//     }),
-//   ],
-// });
-
+//
 import winston from 'winston';
 import { env } from '../config/env';
+
+const isVercel = process.env.VERCEL === '1';
 
 // ✅ Custom JSON replacer to handle BigInt
 const bigIntReplacer = (key: string, value: any) => {
@@ -64,19 +60,49 @@ const consoleFormat = winston.format.combine(
   })
 );
 
-export const logger = winston.createLogger({
-  level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: logFormat,
-  transports: [
-    new winston.transports.Console({
-      format: consoleFormat,
-    }),
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.timestamp({ format: 'HH:mm:ss' }),
+      winston.format.printf(({ timestamp, level, message, ...meta }) => {
+        const metaStr = Object.keys(meta).length
+          ? '\n' + JSON.stringify(meta, null, 2)
+          : '';
+        return `${timestamp} [${level}]: ${message}${metaStr}`;
+      })
+    ),
+  }),
+];
+
+// ✅ Only write to files locally
+if (!isVercel) {
+  const fs = require('fs');
+  if (!fs.existsSync('logs')) {
+    fs.mkdirSync('logs', { recursive: true });
+  }
+
+  transports.push(
     new winston.transports.File({
       filename: 'logs/error.log',
       level: 'error',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
     }),
     new winston.transports.File({
       filename: 'logs/combined.log',
-    }),
-  ],
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
+    })
+  );
+}
+
+export const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  transports,
 });
+  
