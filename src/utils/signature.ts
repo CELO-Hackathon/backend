@@ -4,7 +4,7 @@ export const EIP712_DOMAIN = {
   name: 'PulseVault',
   version: '1',
   chainId: process.env.CELO_CHAIN_ID || 11142220,
-  verifyingContract: '' as Address, // Will be set dynamically
+  verifyingContract: '' as Address, 
 };
 
 export const TRANSFER_TYPES = {

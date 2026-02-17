@@ -6,7 +6,7 @@ import { env } from './env';
 import { PulseVault } from '../abi/PulseVault';
 
 export const celoSepolia = defineChain({
-  id: 1114220,
+  id: 11142220,
   name: 'Celo Sepolia Testnet',
   nativeCurrency: {
     decimals: 18,

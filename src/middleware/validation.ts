@@ -30,6 +30,12 @@ export const executeTransferSchema = z.object({
   intentId: z.string(),
   signature: z.string().startsWith('0x'),
   userAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  request: z.object({
+    recipient: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    amount: z.string(),
+    nonce: z.string(),
+    deadline: z.string(),
+  }).optional(),
 });
 
 export const createScheduleSchema = z.object({

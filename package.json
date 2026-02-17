@@ -20,6 +20,7 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^2.7.0",
     "mongoose": "^8.0.3",
     "node-cron": "^3.0.3",
     "viem": "^2.45.3",
@@ -36,6 +37,7 @@
     "@typescript-eslint/parser": "^6.16.0",
     "eslint": "^8.56.0",
     "nodemon": "^3.0.2",
+    "@types/node-fetch": "^2.6.9",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }

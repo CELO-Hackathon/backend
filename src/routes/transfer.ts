@@ -26,7 +26,38 @@ router.post('/execute',
     validate(executeTransferSchema),
     async (req, res, next) => {
   try {
-    const { intentId, signature, userAddress } = req.body;
+    // const { intentId, signature, userAddress } = req.body;
+    
+    // logger.info('Executing transfer', { intentId, userAddress });
+    
+    // // Get intent
+    // const intent = await Intent.findById(intentId);
+    // if (!intent) {
+    //   return res.status(404).json({ error: 'Intent not found' });
+    // }
+    
+    // if (intent.status === 'executed') {
+    //   return res.status(400).json({ error: 'Intent already executed' });
+    // }
+    
+    // // Get user
+    // const user = await User.findOne({ address: userAddress.toLowerCase() });
+    // if (!user) {
+    //   return res.status(404).json({ error: 'User not found' });
+    // }
+    
+    // // Build transfer request
+    // const nonce = await blockchain.getNonce(userAddress as Address);
+    // const amount = usdToWei(intent.parsedIntent.amount);
+    // const deadline = calculateDeadline(1);
+    
+    // const request = {
+    //   recipient: intent.parsedIntent.recipient as Address,
+    //   amount,
+    //   nonce,
+    //   deadline: BigInt(deadline),
+    // };
+    const { intentId, signature, userAddress, request: signedRequest } = req.body; // ✅ Accept request from body
     
     logger.info('Executing transfer', { intentId, userAddress });
     
@@ -46,24 +77,28 @@ router.post('/execute',
       return res.status(404).json({ error: 'User not found' });
     }
     
-    if (!user.agentAuthorized) {
-      return res.status(403).json({
-        error: 'Agent not authorized. Please call setAgentLimit() first.',
-      });
+    // ✅ Use the signed request if provided, otherwise build it
+    let request;
+    if (signedRequest) {
+      request = {
+        recipient: signedRequest.recipient as Address,
+        amount: BigInt(signedRequest.amount),
+        nonce: BigInt(signedRequest.nonce),
+        deadline: BigInt(signedRequest.deadline),
+      };
+    } else {
+      // Fallback to building it (won't work for pre-signed requests)
+      const nonce = await blockchain.getNonce(userAddress as Address);
+      const amount = usdToWei(intent.parsedIntent.amount);
+      const deadline = calculateDeadline(1);
+      
+      request = {
+        recipient: intent.parsedIntent.recipient as Address,
+        amount,
+        nonce,
+        deadline: BigInt(deadline),
+      };
     }
-    
-    // Build transfer request
-    const nonce = await blockchain.getNonce(userAddress as Address);
-    const amount = usdToWei(intent.parsedIntent.amount);
-    const deadline = calculateDeadline(1);
-    
-    const request = {
-      recipient: intent.parsedIntent.recipient as Address,
-      amount,
-      nonce,
-      deadline,
-    };
-    
     // Execute on blockchain
     const result = await blockchain.executeTransfer(request, signature as Hex);
     
@@ -74,7 +109,7 @@ router.post('/execute',
       agentId: parseInt(env.PLATFORM_AGENT_ID),
       txHash: result.txHash,
       recipient: intent.parsedIntent.recipient,
-      amount: amount.toString(),
+      amount: signedRequest.amount.toString() || usdToWei(intent.parsedIntent.amount),
       status: result.status,
       blockNumber: result.blockNumber,
       gasUsed: result.gasUsed,
